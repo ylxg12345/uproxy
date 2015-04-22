@@ -59,5 +59,8 @@ Polymer({
   ready: function() {
     this.ui = browserified_exports.ui;
     this.model = browserified_exports.model;
+    if (browserified_exports.ui.browser == 'firefox') {
+      this.$.sendingFeedbackDialog.style.width = '307px';
+    }
   }
 });

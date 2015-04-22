@@ -29,5 +29,10 @@ Polymer({
       this.analyzingNetwork = false;
       this.analyzedNetwork = true;
     });
+  },
+  ready: function() {
+    if (browserified_exports.ui.browser == 'firefox') {
+      this.$.troubleshootDialog.style.width = '307px';
+    }
   }
 });

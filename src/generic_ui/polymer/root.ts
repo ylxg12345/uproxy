@@ -31,7 +31,7 @@ Polymer({
       this.fire('core-signal', {name: "login-success"});
       if (!browserified_exports.model.globalSettings.hasSeenWelcome) {
         this.statsDialogOrBubbleOpen = true;
-        this.$.statsDialog.toggle();
+        this.$.statsDialog.open();
       }
       this.closeSettings();
       this.$.modeTabs.updateBar();
@@ -105,6 +105,15 @@ Polymer({
     if (browserified_exports.ui.browserApi.browserSpecificElement){
       var browserCustomElement = document.createElement(browserified_exports.ui.browserApi.browserSpecificElement);
       this.$.browserElementContainer.appendChild(browserCustomElement);
+    }
+    if (browserified_exports.ui.view == ui_types.View.ROSTER &&
+        !browserified_exports.model.globalSettings.hasSeenWelcome) {
+      this.statsDialogOrBubbleOpen = true;
+      this.$.statsDialog.open();
+    }
+    if (browserified_exports.ui.browser == 'firefox') {
+      this.$.statsDialog.style.width = '307px';
+      this.$.dialog.style.width = '307px';
     }
   },
   closeStatsBubble: function() {

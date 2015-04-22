@@ -8,5 +8,8 @@ Polymer({
   },
   ready: function() {
     this.model = browserified_exports.model;
+    if (browserified_exports.ui.browser == 'firefox') {
+      this.$.reconnectDialog.style.width = '307px';
+    }
   }
 });
