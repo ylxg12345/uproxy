@@ -26,7 +26,7 @@ Polymer({
   },
   setStunServer: function() {
     browserified_exports.model.globalSettings.stunServers = [{urls: [this.stunServer]}];
-    browserified_exports.core.updateGlobalSettings(browserified_exports.model.globalSettings);
+    this.saveGlobalSettings();
     if(!this.$.confirmResetServers.hidden) {
       this.$.confirmResetServers.hidden = true;
     }
@@ -42,6 +42,12 @@ Polymer({
   },
   openFeedbackForm: function() {
     this.fire('core-signal', {name: 'open-feedback'});
+  },
+  saveGlobalSettings: function() {
+    browserified_exports.core.updateGlobalSettings(browserified_exports.model.globalSettings);
+  },
+  observe: {
+    'model.globalSettings.statsReportingEnabled' : 'saveGlobalSettings'
   },
   ready: function() {
     this.ui = browserified_exports.ui;

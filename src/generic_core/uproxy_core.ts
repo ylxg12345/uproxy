@@ -2,7 +2,6 @@ import diagnose_nat = require('./diagnose-nat');
 import globals = require('./globals');
 import logging = require('../../../third_party/uproxy-lib/logging/logging');
 import loggingTypes = require('../../../third_party/uproxy-lib/loggingprovider/loggingprovider.types');
-import metrics = require('./metrics');
 import net = require('../../../third_party/uproxy-networking/net/net.types');
 import remote_connection = require('./remote-connection');
 import remote_instance = require('./remote-instance');
@@ -42,22 +41,9 @@ loggingController.setDefaultFilter(
  */
 export class uProxyCore implements uproxy_core_api.CoreApi {
 
-  private metrics_ :metrics.Metrics;
-  private onceMetricsLoaded_ :Promise<void>;
-
   constructor() {
     log.debug('Preparing uProxy Core');
     copyPasteConnection = new remote_connection.RemoteConnection(ui.update);
-
-    // TODO: types
-    this.onceMetricsLoaded_ = globals.storage.load('metrics')
-        .then((metricsFromStorage) => {
-      log.info('Loaded metrics from storage', metricsFromStorage);
-      this.metrics_ = new metrics.Metrics(metricsFromStorage);
-    }).catch((e) => {
-      log.info('No metrics found in storage');
-      this.metrics_ = new metrics.Metrics({});
-    });
   }
 
   // sendInstanceHandshakeMessage = (clientId :string) => {
@@ -421,9 +407,5 @@ export class uProxyCore implements uproxy_core_api.CoreApi {
     text = text.replace(/"imageData":"[^"]*"/g, '"imageData":"IMAGE_DATA"');
     text = text.replace(/"url":"[^"]*"/g, '"url":"URL"');
     return text;
-  }
-
-  public incrementMetric = (name :string) => {
-    this.onceMetricsLoaded_.then(this.metrics_.increment.bind(this, name));
   }
 }  // class uProxyCore

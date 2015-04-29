@@ -199,10 +199,12 @@ import uproxy_core_api = require('../interfaces/uproxy_core_api');
           false
       ).then((endpoint :net.Endpoint) => {
         this.localGettingFromRemote = social.GettingState.GETTING_ACCESS;
+        globals.metrics.increment('success');
         this.stateRefresh_();
         return endpoint;
       }).catch((e :Error) => {
         this.localGettingFromRemote = social.GettingState.NONE;
+        globals.metrics.increment('failure');
         this.stateRefresh_();
         return Promise.reject(Error('Could not start proxy'));
       });
