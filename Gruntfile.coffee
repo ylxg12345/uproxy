@@ -384,6 +384,11 @@ module.exports = (grunt) ->
           ]
           files: [
             {
+              expand: true, cwd: 'node_modules/freedomjs-anonymized-metrics/',
+              src: ['anonmetrics.json', 'metric.js']
+              dest: chromeAppDevPath + '/freedomjs-anonymized-metrics'
+            },
+            {
               expand: true, cwd: 'node_modules/freedom-social-xmpp/dist/',
               src: ['**']
               dest: chromeAppDevPath + '/freedom-social-xmpp'
@@ -435,6 +440,11 @@ module.exports = (grunt) ->
             'uproxy-networking/churn-pipe'
           ]
           files: [
+            {
+              expand: true, cwd: 'node_modules/freedomjs-anonymized-metrics/',
+              src: ['anonmetrics.json', 'metric.js']
+              dest: firefoxDevPath + 'data/freedomjs-anonymized-metrics'
+            },
             {
               expand: true, cwd: 'node_modules/freedom-social-xmpp/dist/',
               src: ['**']
