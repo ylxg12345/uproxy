@@ -11,7 +11,8 @@ import freedomMocker = require('../../../third_party/uproxy-lib/freedom/mocks/mo
 import freedom_mocks = require('../mocks/freedom-mocks');
 freedom = freedomMocker.makeMockFreedomInModuleEnv({
     'core.storage': () => { return new freedom_mocks.MockStorage(); },
-    'loggingcontroller': () => { return new freedom_mocks.MockLoggingController(); }
+    'loggingcontroller': () => { return new freedom_mocks.MockLoggingController(); },
+    'metrics': () => { return new freedom_mocks.MockMetrics(); }
 });
 
 import remote_connection = require('./remote-connection');
@@ -67,10 +68,13 @@ describe('remote_connection.RemoteConnection', () => {
       var start = connection.startGet();
       socksToRtc.resolveStart(null);
 
+      jasmine.clock().install();
       start.then(() => {
         expect(connection.localGettingFromRemote).toEqual(social.GettingState.GETTING_ACCESS);
+        jasmine.clock().uninstall();
         done();
       }).catch(failTest);
+      jasmine.clock().tick(1);  // make start.then promise fulfill
     });
 
     it('cleanup after failure to start', (done) => {

@@ -20,6 +20,7 @@ import version = require('../version/version');
 import browser_connector = require('../interfaces/browser_connector');
 import ui = require('./ui_connector');
 import uproxy_core = require('./uproxy_core');
+import globals = require('./globals');
 
 import ui_connector = ui.connector;
 
@@ -97,3 +98,13 @@ ui_connector.onPromiseCommand(
 ui_connector.onPromiseCommand(
     uproxy_core_api.Command.GET_NAT_TYPE,
     core.getNatType);
+
+globals.metrics.on('report', (payload :any) => {
+  globals.loadSettings.then(() => {
+    if (globals.settings.statsReportingEnabled) {
+      ui_connector.update(
+          uproxy_core_api.Update.POST_TO_CLOUDFRONT,
+          {payload: payload, cloudfrontPath: 'submit-rappor-stats'});
+    }
+  });
+});

@@ -39,38 +39,30 @@ export var natType :string = '';
 
 export var loadSettings :Promise<void> =
   storage.load<uproxy_core_api.GlobalSettings>('globalSettings')
-    .then((settingsObj :uproxy_core_api.GlobalSettings) => {
-      log.info('Loaded global settings', settingsObj);
-      settings = settingsObj;
+    .then((storedSettings :uproxy_core_api.GlobalSettings) => {
+      log.info('Loaded global settings', storedSettings);
       // If no custom STUN servers were found in storage, use the default
       // servers.
+      settings.stunServers = storedSettings.stunServers;
       if (!settings.stunServers
           || settings.stunServers.length == 0) {
         settings.stunServers = DEFAULT_STUN_SERVERS.slice(0);
       }
-      // If storage does not know if this user has seen a specific overlay
-      // yet, assume the user has not seen it so that they will not miss any
-      // onboarding information.
-      if (settings.hasSeenSharingEnabledScreen == null) {
-        settings.hasSeenSharingEnabledScreen = false;
-      }
-      if (settings.hasSeenWelcome == null) {
-        settings.hasSeenWelcome = false;
-      }
-      if (settings.allowNonUnicast == null) {
-        settings.allowNonUnicast = false;
-      }
-      if (typeof settings.mode == 'undefined') {
-        settings.mode = user_interface.Mode.GET;
-      }
-      if (settings.statsReportingEnabled == null) {
-        settings.statsReportingEnabled = false;
+      // Set all booleans to values from storage, or default to false if
+      // missing from storage.
+      settings.hasSeenSharingEnabledScreen =
+          storedSettings.hasSeenSharingEnabledScreen || false;
+      settings.hasSeenWelcome = storedSettings.hasSeenWelcome || false;
+      settings.allowNonUnicast = storedSettings.allowNonUnicast || false;
+      settings.statsReportingEnabled =
+          storedSettings.statsReportingEnabled || false;
+
+      // Restore mode if it is available in storage.
+      if (typeof storedSettings.mode != 'undefined') {
+        settings.mode = storedSettings.mode;
       }
     }).catch((e) => {
       log.info('No global settings loaded', e.message);
     });
 
-export var metrics :metrics_module.Metrics;
-loadSettings.then(() => {
-  metrics = new metrics_module.Metrics(storage, settings);
-});
+export var metrics = new metrics_module.Metrics(storage);

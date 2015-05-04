@@ -3,19 +3,20 @@
 import crypto = require('../../../third_party/uproxy-lib/crypto/random');
 import logging = require('../../../third_party/uproxy-lib/logging/logging');
 import storage = require('../interfaces/storage');
-import ui_connector = require('./ui_connector');
 import uproxy_core_api = require('../interfaces/uproxy_core_api');
 
 var log :logging.Log = new logging.Log('metrics');
 
-interface MetricsData {
+export interface MetricsData {
   nextSendTimestamp :number;
   success           :number;
   failure           :number;
 };
 
 export class Metrics {
-  private onceLoaded_ :Promise<void>;
+  public static MAX_TIMEOUT = 5 * 24 * 60 * 60 * 1000;  // 10 days in milliseconds.
+
+  public onceLoaded_ :Promise<void>;  // Only public for tests
   private metricsProvider_ :freedom_AnonymizedMetrics;
   private data_ :MetricsData = {
     nextSendTimestamp: 0,  // Timestamp is in milliseconds.
@@ -23,8 +24,7 @@ export class Metrics {
     failure: 0
   };
 
-  constructor(private storage_ :storage.Storage,
-              private settings_ :uproxy_core_api.GlobalSettings) {
+  constructor(private storage_ :storage.Storage) {
     var counterMetric = {
       type: 'logarithmic', base: 2, num_bloombits: 8, num_hashes: 2,
       num_cohorts: 64, prob_p: 0.5, prob_q: 0.75, prob_f: 0.5,
@@ -49,11 +49,13 @@ export class Metrics {
 
     this.onceLoaded_.then(() => {
       // Once nextSendTimestamp is set (either from storage or initialized),
-      // set a timeout to send metrics at that timestamp.  If the timestamp
+      // set a timeout to create metrics at that timestamp.  If the timestamp
       // has already passed (e.g. their browser was closed when the time passed)
-      // this will send a report immediately.
+      // this will create a report immediately.
+      log.info('Creating metrics report at ' +
+          new Date(this.data_.nextSendTimestamp));
       Metrics.runNowOrLater_(
-          this.sendReport_.bind(this), this.data_.nextSendTimestamp);
+          this.createReport_.bind(this), this.data_.nextSendTimestamp);
     })
   }
 
@@ -71,52 +73,53 @@ export class Metrics {
     });
   }
 
-  // Sends a rapporized report to the uProxy cloudfront site, only if the user
-  // has enabled anonymous stats reporting, then resets all metrics and sets
-  // a new timeout.  If the user has not enabled anonymous stats reporting,
-  // we only reset all metrics and set a new timeout.
-  private sendReport_ = () => {
+  private createReport_ = () => {
     var resetStats = () => {
       this.data_.success = 0;
       this.data_.failure = 0;
       this.data_.nextSendTimestamp = Metrics.getNextSendTimestamp_();
       Metrics.runNowOrLater_(
-          this.sendReport_.bind(this), this.data_.nextSendTimestamp);
+          this.createReport_.bind(this), this.data_.nextSendTimestamp);
       this.save_();
     };
 
-    var isCryptoAvailable = true;
     try {
       crypto.randomUint32();
     } catch (e) {
-      isCryptoAvailable = false;
+      // crypto is not enabled, don't create a report
+      resetStats();
+      return;
     }
 
-    if (this.settings_.statsReportingEnabled && isCryptoAvailable) {
-      this.onceLoaded_.then(() => {
-        log.info('Sending metrics report');
-        var successReport =
-            this.metricsProvider_.report('success-v1', this.data_.success);
-        var failureReport =
-            this.metricsProvider_.report('failure-v1', this.data_.failure);
-        Promise.all([successReport, failureReport]).then(() => {
-          this.metricsProvider_.retrieve().then((payload :Object) => {
-            ui_connector.connector.update(
-                uproxy_core_api.Update.POST_TO_CLOUDFRONT,
-                {payload: payload, cloudfrontPath: 'submit-rappor-stats'});
-            resetStats();
-          }).catch((e :Error) => {
-            log.error('Error in retrieving metrics', e);
-            resetStats();
-          });
-        }).catch((e :Error) => {
-          log.error('Error reporting metrics', e);
+    this.onceLoaded_.then(() => {
+      log.info('Creating metrics report');
+      var successReport =
+          this.metricsProvider_.report('success-v1', this.data_.success);
+      var failureReport =
+          this.metricsProvider_.report('failure-v1', this.data_.failure);
+      Promise.all([successReport, failureReport]).then(() => {
+        this.metricsProvider_.retrieve().then((payload :Object) => {
+          this.emit('report', payload);
           resetStats();
         });
       });
-    } else {
-      log.info('Metrics not enabled, reseting');
+    }).catch((e :Error) => {
+      log.error('Error creating metrics report', e);
       resetStats();
+    });
+  }
+
+  private events_ :{[name :string] :Function} = {};
+
+  public on = (name :string, callback :Function) => {
+    this.events_[name] = callback;
+  }
+
+  public emit = (name :string, ...args :Object[]) => {
+    if (name in this.events_) {
+      this.events_[name].apply(null, args);
+    } else {
+      log.error('Attempted to trigger an unknown event', name);
     }
   }
 
@@ -145,6 +148,7 @@ export class Metrics {
     var randomFloat = Math.random();
     var MS_PER_DAY = 24 * 60 * 60 * 1000;
     var offset_ms = -Math.floor(Math.log(randomFloat) / (1 / MS_PER_DAY));
+    var offset_ms = Math.min(offset_ms, Metrics.MAX_TIMEOUT)
     return Date.now() + offset_ms;
   }
 }
