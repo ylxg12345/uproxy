@@ -174,6 +174,7 @@ export interface CloudfrontPostData {
 export interface LoginArgs {
   network :string;
   reconnect :boolean;
+  userId ?:string;
 }
 
 export interface NetworkInfo {

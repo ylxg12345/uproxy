@@ -6,20 +6,28 @@ var model = ui_context.model;
 var core = ui_context.core;
 
 Polymer({
-  sendToGMailFriend: function() {
-    // TODO: how to get userId of logged in  user?
+  getSelectedNetworkInfo_ : function() {
     var selectedNetwork =
-        model.onlineNetworks[this.$.networkSelectMenu.selectedIndex];
-    var selectedNetworkInfo = {
+      model.onlineNetworks[this.$.networkSelectMenu.selectedIndex];
+    return {
       name: selectedNetwork.name,
       userId: selectedNetwork.userId
     };
-    core.getInviteUrl(selectedNetworkInfo).then((inviteUrl: string) => {
+  },
+  generateInviteUrl: function() {
+    // TODO: how to get userId of logged in  user?
+    return core.getInviteUrl(this.getSelectedNetworkInfo_()).then(
+        (inviteUrl:string) => {
+      this.inviteUrl = inviteUrl;
+    });
+  },
+  sendToGMailFriend: function() {
+    this.generateInviteUrl().then(() => {
       core.sendEmail({
-          networkInfo: selectedNetworkInfo,
-          to: this.inviteUserEmail,
-          subject: 'Join me on uProxy',
-          body: 'Click here to join me on uProxy' + inviteUrl
+        networkInfo: this.getSelectedNetworkInfo_(),
+        to: this.inviteUserEmail,
+        subject: 'Join me on uProxy',
+        body: 'Click here to join me on uProxy' + this.inviteUrl
       });
       this.fire('open-dialog', {
         heading: 'Invitation Email sent', // TODO: translate
@@ -30,19 +38,12 @@ Polymer({
       });
       this.closeInviteUserPanel();
     });
-
   },
   sendToFacebookFriend: function() {
-    var selectedNetwork =
-      model.onlineNetworks[this.$.networkSelectMenu.selectedIndex];
-    var selectedNetworkInfo = {
-      name: selectedNetwork.name,
-      userId: selectedNetwork.userId
-    };
-    core.getInviteUrl(selectedNetworkInfo).then((inviteUrl: string) => {
+    this.generateInviteUrl().then(() => {
       var facebookUrl =
           'https://www.facebook.com/dialog/send?app_id=%20161927677344933&link='
-          + inviteUrl + '&redirect_uri=https://www.uproxy.org/';
+          + this.inviteUrl + '&redirect_uri=https://www.uproxy.org/';
       ui.openTab(facebookUrl);
       this.fire('open-dialog', {
         heading: '', // TODO:
@@ -69,12 +70,14 @@ Polymer({
     this.$.inviteUserPanel.open();
   },
   closeInviteUserPanel: function() {
+    this.inviteUrl = '';
     this.$.inviteUserPanel.close();
   },
   showAcceptUserInvite: function() {
     this.fire('core-signal', { name: 'open-accept-user-invite-dialog' });
   },
   ready: function() {
+    this.inviteUrl = '';
     this.inviteUserEmail = '';
     this.selectedNetworkName = '';
     this.model = model;

@@ -62,6 +62,17 @@
             Send to GMail Friend
           </paper-button>
         </div>
+
+        <div hidden?='{{ selectedNetworkName != "Quiver"}}'>
+          <paper-button affirmative on-tap='{{ generateInviteUrl }}'>
+            Generate Quiver Invite Link
+          </paper-button>
+
+          <div hidden?='{{ inviteUrl == "" }}'>
+            <p>Send this link to your friend so they can find you on Quiver</p>
+            <input readonly is='core-input' on-tap='{{ select }}' value='{{ inviteUrl }}' />
+          </div>
+        </div>
       </div>
 
       <div class='section'>

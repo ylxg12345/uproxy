@@ -327,6 +327,7 @@ module.exports = (grunt) ->
       freedomfirefox: grunt.file.readJSON('node_modules/freedom-for-firefox/package.json')
       freedomxmpp: grunt.file.readJSON('node_modules/freedom-social-xmpp/package.json')
       freedomfirebase: grunt.file.readJSON('node_modules/freedom-social-firebase/package.json')
+      freedomquiver: grunt.file.readJSON('node_modules/freedom-social-quiver/package.json')
 
     clean: ['build/dev', 'build/dist', '.tscache']
 
@@ -488,6 +489,7 @@ module.exports = (grunt) ->
               'freedom-social-firebase/firebase.js'
               'freedom-social-firebase/firebase-social-provider.js'
               'freedom-social-firebase/facebook-social-provider.js'
+              'freedom-social-quiver/social2.quiver.js'
               'freedom-port-control/port-control.js'
               'freedom-port-control/port-control.json'
 
@@ -530,6 +532,7 @@ module.exports = (grunt) ->
               'data/freedom-social-firebase/firebase.js'
               'data/freedom-social-firebase/firebase-social-provider.js'
               'data/freedom-social-firebase/facebook-social-provider.js'
+              'data/freedom-social-quiver/social2.quiver.js'
               'data/freedom-port-control/port-control.js'
               'data/freedom-port-control/port-control.json'
 
@@ -691,6 +694,11 @@ module.exports = (grunt) ->
               dest: chromeAppDevPath + '/freedom-social-firebase'
             },
             {
+              expand: true, cwd: 'node_modules/freedom-social-quiver/src/',  #FIXME need a dist directory
+              src: ['**']
+              dest: chromeAppDevPath + '/freedom-social-quiver'
+            },
+            {
               expand: true, cwd: 'node_modules/freedom-port-control/dist/',
               src: ['**']
               dest: chromeAppDevPath + '/freedom-port-control'
@@ -751,6 +759,11 @@ module.exports = (grunt) ->
               expand: true, cwd: 'node_modules/freedom-social-firebase/dist/',
               src: ['**']
               dest: firefoxDevPath + '/data/freedom-social-firebase'
+            },
+            {
+              expand: true, cwd: 'node_modules/freedom-social-quiver/src/',
+              src: ['**']
+              dest: firefoxDevPath + '/data/freedom-social-quiver'
             },
             {
               expand: true, cwd: 'node_modules/freedom-port-control/dist/',
@@ -859,6 +872,7 @@ module.exports = (grunt) ->
               'freedom-for-firefox': '<%= pkgs.freedomfirefox.version %>'
               'freedom-social-xmpp': '<%= pkgs.freedomxmpp.version %>'
               'freedom-social-firebase': '<%= pkgs.freedomfirebase.version %>'
+              'freedom-social-quiver': '<%= pkgs.freedomquiver.version %>'
           }]
       chromeExtVulcanized:
         finishVulcanized(chromeExtDevPath + '/generic_ui', 'vulcanized')

@@ -57,6 +57,11 @@ import ui = ui_connector.connector;
       isFirebase: true,
       enableMonitoring: true,
       areAllContactsUproxy: true
+    },
+    'Quiver': {
+      isFirebase: true,  // Gets us the login and password
+      enableMonitoring: true,
+      areAllContactsUproxy: true
     }
   }
 
@@ -254,7 +259,7 @@ export function getNetworkDisplayName(networkName :string) : string {
     //================ Subclasses must override these methods ================//
 
     // From Social.Network:
-    public login = (reconnect :boolean) :Promise<void> => {
+    public login = (reconnect :boolean, userId?:string) :Promise<void> => {
       throw new Error('Operation not implemented');
     }
     public logout = () : Promise<void> => {
@@ -494,7 +499,7 @@ export function getNetworkDisplayName(networkName :string) : string {
 
     //===================== Social.Network implementation ====================//
 
-    public login = (reconnect :boolean) : Promise<void> => {
+    public login = (reconnect :boolean, userId ?:string) : Promise<void> => {
       var request :freedom_social.LoginRequest = null;
       if (this.isFirebase_()) {
         // Firebase enforces only 1 login per agent per userId at a time.
@@ -512,9 +517,10 @@ export function getNetworkDisplayName(networkName :string) : string {
         // Firebase code to change disconnected clients to OFFLINE, rather
         // than removing them.
         var agent = 'uproxy' + Math.random().toString().substr(2,10);
+        // TODO: remove this crazy hack of passing userId in the version
         request = {
           agent: agent,
-          version: '0.1',
+          version: JSON.stringify({userId: userId}),
           url: 'https://popping-heat-4874.firebaseio.com/',
           interactive: !reconnect,
           rememberLogin: !reconnect
@@ -715,7 +721,7 @@ export function getNetworkDisplayName(networkName :string) : string {
 
     //===================== Social.Network implementation ====================//
 
-    public login = (reconnect :boolean) : Promise<void> => {
+    public login = (reconnect :boolean, userId ?:string) : Promise<void> => {
       return Promise.resolve<void>();
     }
 

@@ -15,6 +15,10 @@
       "url": "../freedom-social-firebase/social.firebase-facebook.json",
       "api": "social2"
     },
+    "SOCIAL-Quiver": {
+      "url": "../freedom-social-quiver/social2.quiver.json",
+      "api": "social2"
+    },
     "loggingcontroller": {
       "url": "../uproxy-lib/loggingprovider/freedom-module.json",
       "api": "loggingcontroller"
