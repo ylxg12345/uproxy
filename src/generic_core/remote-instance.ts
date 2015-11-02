@@ -79,7 +79,7 @@ import Persistent = require('../interfaces/persistent');
     private isUIUpdatePending = false;
 
     // Number of milliseconds before timing out socksToRtc_.start
-    public SOCKS_TO_RTC_TIMEOUT :number = 30000;
+    public SOCKS_TO_RTC_TIMEOUT :number = 90000;
     // Ensure RtcToNet is only closed after SocksToRtc times out (i.e. finishes
     // trying to connect) by timing out rtcToNet_.start 15 seconds later than
     // socksToRtc_.start
@@ -127,7 +127,8 @@ import Persistent = require('../interfaces/persistent');
             log.error('Could not find clientId for instance', this);
             return;
           }
-          if (typeof this.publicKey !== 'undefined') {
+          if (typeof this.publicKey !== 'undefined' &&
+              this.messageVersion >= 5) {
             var arrayBufferData =
                 arraybuffers.stringToArrayBuffer(JSON.stringify(data.data));
             pgp.signEncrypt(arrayBufferData, this.publicKey)
